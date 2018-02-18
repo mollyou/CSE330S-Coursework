@@ -8,16 +8,29 @@ Modules and their desriptions:
 
 Module 1:  A basic webpage with a DuckDuckGo searchbar (HTML, CSS)
 
-Module 2:  A simple calculator (PHP)
 
-Module 3:  A reddit-style link aggregation site (PHP, SQL)
+Module 2 (individual):  A simple calculator (PHP) 
+
+Module 2 (partner):  A file-sharing website (PHP)
+
+
+Module 3 (individual):  SQL queries (SQL)
+
+Module 3 (partner):  A reddit-style link aggregation site (PHP, SQL)
+
 
 Module 4:  Extracting data from text documents using (Python)
 
-Module 5:  Interactive event calendar (PHP, SQL, HTML, CSS)
+
+Module 5 (individual):  Weather application using JSON (JavaScript)
+
+Module 5 (group):  Interactive event calendar (PHP, SQL, HTML, CSS, JavaScript)
+
 
 Module 6:  Chatroom (NodeJS, SocketIO)
 
-Module 7:  Coffee review website (AngualrJS)
+
+Module 7:  Coffee review website (AngularJS)
+
 
 Creative Project:  Bird-based social media website (PHP Laravel)
