@@ -1,0 +1,25 @@
+# LEDs out the board
+NET "led<0>" LOC = "F12" 		| IOSTANDARD = LVTTL | SLEW = SLOW | DRIVE = 8 ;
+NET "led<1>" LOC = "E12" 		| IOSTANDARD = LVTTL | SLEW = SLOW | DRIVE = 8 ;
+NET "led<2>" LOC = "E11" 		| IOSTANDARD = LVTTL | SLEW = SLOW | DRIVE = 8 ;
+NET "led<3>" LOC = "F11" 		| IOSTANDARD = LVTTL | SLEW = SLOW | DRIVE = 8 ;
+NET "led<4>" LOC = "C11" 		| IOSTANDARD = LVTTL | SLEW = SLOW | DRIVE = 8 ;
+# Define the clock pin and parameters
+NET "mclk" LOC = "C9" 			| IOSTANDARD = LVCMOS33 ;
+NET "mclk" TNM_NET = "mclk";
+TIMESPEC "TS_mclk" = PERIOD "mclk" 20 ns HIGH 40 %;
+# 1 switch
+NET "swt" LOC = "L13" 		| IOSTANDARD = LVTTL | PULLUP ;
+# The directional switches and the button press
+NET "btn<0>" LOC = "V4"  		| IOSTANDARD = LVTTL | PULLDOWN ;
+NET "btn<1>" LOC = "K17" 		| IOSTANDARD = LVTTL | PULLDOWN ;
+#The LCD control pins
+NET "lcd_en"  LOC = "M18"  	| IOSTANDARD = LVCMOS33 | DRIVE = 4 | SLEW = SLOW ;
+NET "lcd_rs"  LOC = "L18"  	| IOSTANDARD = LVCMOS33 | DRIVE = 4 | SLEW = SLOW ;
+NET "lcd_rw"  LOC = "L17"  	| IOSTANDARD = LVCMOS33 | DRIVE = 4 | SLEW = SLOW ;
+# The LCD four-bit data interface is shared with the StrataFlash.
+NET "sf_d<0>"  LOC = "R15" 	| IOSTANDARD = LVCMOS33 | DRIVE = 4 | SLEW = SLOW ;
+NET "sf_d<1>"  LOC = "R16" 	| IOSTANDARD = LVCMOS33 | DRIVE = 4 | SLEW = SLOW ;
+NET "sf_d<2>" LOC = "P17"  	| IOSTANDARD = LVCMOS33 | DRIVE = 4 | SLEW = SLOW ;
+NET "sf_d<3>" LOC = "M15"  	| IOSTANDARD = LVCMOS33 | DRIVE = 4 | SLEW = SLOW ;
+NET "sf_ce0"  LOC = "D16"  	| IOSTANDARD = LVCMOS33 | DRIVE = 4 | SLEW = SLOW ;

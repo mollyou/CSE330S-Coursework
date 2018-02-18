@@ -1,0 +1,7 @@
+Phoebe Moh :: 438020
+Julia Vogl :: 435169
+
+http://ec2-52-43-56-150.us-west-2.compute.amazonaws.com/~mohphoebe/Module2/fall2016-module2-phoebe-moh-438020-julia-vogl-435169/public_html/FileSharingSite.php
+
+We added file sharing between users, as well as a new user function.
+To utilize the file sharing function, use the dropdown at the bottom of the page. For creating a new user, select a new username at the front page, then select register. If a username is already taken, you won't be able to select it.
