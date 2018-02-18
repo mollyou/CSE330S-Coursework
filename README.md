@@ -33,4 +33,4 @@ Module 6:  Chatroom (NodeJS, SocketIO)
 Module 7:  Coffee review website (AngularJS)
 
 
-Creative Project:  Bird-based social media website (PHP Laravel)
+Creative Project (project330):  Bird-based social media website (PHP Laravel)
