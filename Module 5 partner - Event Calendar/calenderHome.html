@@ -1,0 +1,543 @@
+
+<!DOCTYPE html>
+	<head>
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+		<script src="calendar.js" type="text/javascript"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" type="text/javascript"></script>
+		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" type="text/javascript"></script>
+		<meta charset="utf-8"/>
+		<title>Calendar</title>
+		<style type="text/css">
+			body{
+				width: 760px; /* how wide to make your web page */
+				background-color: teal; /* what color to make the background */
+				margin: 0 auto;
+				padding: 0;
+				font:12px/16px Verdana, sans-serif; /* default font */
+			}
+			div#main{
+				background-color: #FFF;
+				margin: 0;
+				padding: 10px;
+			}
+			table {
+				border-collapse: collapse;
+				width: 100%;
+				height: 100px;
+				table-layout: fixed;
+				border: 1px solid black;
+			}
+			td {
+				height:  100px;
+				text-align: left;
+				vertical-align: text-top;
+				border: 1px solid black;
+				
+			}
+			th {
+				background-color: teal;
+				border: 1px solid black;
+			}
+			#reg {
+				display: inline-block;
+			}
+			.text-right{
+				text-align:right;
+			}
+			p.inline{
+				display: inline;
+			}
+		</style>
+	</head>
+	
+	<body><div id="main">
+<!--Display-->
+<!--SHOWN IF USER IS NOT LOGGED IN-->
+		<!--User Login/Registration-->
+		<fieldset class = "notLoggedIn">
+			Username:  <input type="text" id="user">
+			Password:  <input type="password" id="passGuess">
+			<button id="loginBUTT">Login</button>
+			<p class="inline" id=reg>Click here to register</p>
+		</fieldset>
+
+<!--END SHOWN IF USER IS NOT LOGGED IN-->
+<!--Shown if the user is logged in-->
+		<div class = "loggedIn">
+			Welcome! <p id="userWelcome" class="inline"></p>
+		</div>
+		<div class="text-right loggedIn">
+			<p class="inline" id="toggleTags">Toggle Tags</p> * <!--Clickable text to toggle tags-->
+			<p class="inline" id="logoutClick">Logout</p>  <!--Clickable text to logout-->
+		</div>
+<!--End shown if the user is logged in-->
+
+		<h1>Cool Calendar</h1><!--Title of our Calender-->
+		<h2 id="dispMon"></h2><!--Display the current month displayed by the calendar-->
+			
+			<!--Buttons-->
+			<button id="prevMonth">Prev</button><!--Button to move to the previous month-->
+			<button id="shareCal" class="loggedIn">Share this Calendar</button><!--Button to share calendar-->
+			<button id="nextMonth">Next</button><!--Button to go to the next month-->
+		<!--Header for the calendar with all the days of the week.  7 Columns, 1 row-->
+		<table id = "calendar">
+			<tr>
+				<th>Sunday</th>
+				<th>Monday</th>
+				<th>Tuesday</th>
+				<th>Wednesday</th>
+				<th>Thursday</th>
+				<th>Friday</th>
+				<th>Saturday</th>
+			</tr>
+		</table>
+		
+	<!--Popup Forms-->
+		<!--Form to register a new user-->
+		<div id="createUserForm" title="Register">
+			<h3>Please enter the information below</h3>
+			<form>
+				<fieldset>
+					<br>
+					<!--Field for the desired username-->
+					<label for="regUsername">Username (alphanumeric characters only)</label>
+						<input type="text" name="regUsername" id="regUsername"><br><br>
+					<!--Field for the passwords-->
+					<label for="newPass1">Password: </label><br>
+						<input type="password" name="newPass1" id="newPass1"><br><br>
+					<label for="newPass2">Enter your password again: </label>
+						<input type="password" name="newPass2" id="newPass2"><br><br>
+					<p id="invalidUsernameWarning"></p><!--Place to display warning if the entered username is not alphanumeric-->
+					<p id="unmatchedPasswordsWarning"></p><!--Place to display warning if the passwords do not match-->
+				</fieldset>
+			</form>
+		</div>
+		
+		<!--Form to create a new event-->
+		<div id="createEventForm" title="Add new Event">
+			<p id="eventDate"></p>
+			<h3>Please enter the information below</h3>
+			<form>
+				<fieldset>
+					<br>
+					<label for="eName">Event Name</label>
+						<input type="text" name="eName" id="eName" maxlength="10"><br><br>
+					<label for="eTime">Event Time: </label>
+						<input type="time" name="eTime" id="eTime"><br><br>
+					<label for="eTag">Event Tag</label>
+						<input type="text" name="eTag" id="eTag" maxlength="10"><br><br>
+				</fieldset>
+			</form>
+		</div>
+	
+		<!--Form to share the calendar-->
+		<div id="calShareForm" title="Calendar Sharing">
+			<h3>Who would you like to share this calender with?</h3>
+			Please enter only one (1) user.<br>
+			<form>
+						<input type="text" name="userShare" id="userShare"><br><br>			
+			</form>
+		</div>
+		
+<!--JAVASCRIPT FXNS-->
+		<script type="text/javascript">
+			//default session token
+				var token = 0;
+			//Default the month to the current month
+				var currentTime = new Date();
+				var currentY = currentTime.getFullYear();
+				var currentM = currentTime.getMonth();
+				var currentMonth = new Month(currentY,currentM);
+			//Arrays for the names of the months and the number of days in each month
+				var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+				var monthLength = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30 ,31];
+			//add event listener to build a calendar upon the page loacding
+			document.addEventListener("DOMContentLoaded", buildCal(currentMonth), false);
+			document.addEventListener("DOMContentLoaded", checkLogin(), false); 
+			
+			
+			//Create event listeners for clicks
+			document.getElementById("prevMonth").addEventListener("click", decreaseMonth);//button moves the calendar to the previous month
+			document.getElementById("nextMonth").addEventListener("click", increaseMonth);//button moves the calendar to the next month
+			document.getElementById("reg").addEventListener("click", openFormReg);//text that, when clicked, brings up user registration
+			document.getElementById("logoutClick").addEventListener("click", logoutJS);
+
+
+			function checkLogin() {
+				var xmlHttp = new XMLHttpRequest();
+				xmlHttp.open("POST", "checkLogin.php", true);
+				xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+				//console.log("year="+dateYear+"&month="+dateMonth+"&day="+dateDay);
+				xmlHttp.addEventListener("load", function(event){
+					var data = JSON.parse(event.target.responseText);
+					if(data.login){
+						token = data.token;
+						$("fieldset.notLoggedIn").toggle();
+						$(".loggedIn").toggle();
+					}
+				}, false);
+				xmlHttp.send(null);
+
+			}
+		
+		//function to build a calander on our page using a month object
+			function buildCal(month){
+				//get the number of weeks in the month so we can make an approriately sized calendar
+				var numWeeks = month.getWeeks().length;
+				
+				//get the number of days in the month from the array we made earlier
+				var numDays = monthLength[month.month];
+				//account for leap years if necessary
+				if(month.month==1 && month.year%4===0 && month.year%100!==0){
+					numDays=29;
+				}
+				
+				//get the day of the week that the first of the month is on
+				var startDayWeek = month.getDateObject(1).getDay();
+				
+				//update the display on the page to display the month and year of the calendar
+				document.getElementById("dispMon").innerHTML=monthNames[month.month]+" "+month.year;
+				var table = document.getElementById("calendar");
+				//console.log(month.month);
+				//console.log(month.year);
+				
+				//reset variables dayNum(counter used to label cells of the table with the day of the month) and started(used for stuff)
+				var dayNum = 1;
+				var started = false;
+				
+				//actually make the calendar now
+				for (i = 0; i <numWeeks; i++){
+					//insert a new row at the bottom of the calendar
+					var r=i+1;
+					var row = table.insertRow(r);
+					
+					//make cells for each day of the week in the row
+					for (j = 0; j<7; j++){
+						var cell = row.insertCell(j);
+						//if the month has "started" but not "ended", but day numbers into the appropriate cells
+						if(dayNum<=numDays && (j===Number(startDayWeek) || started===true)){
+							started = true;
+							//put day number into the cell
+							cell.innerHTML=dayNum;
+							var cellID=dayNum;
+							cell.id=cellID;
+							cell.className="day";
+							
+							document.getElementById(cellID).addEventListener("click", openFormEvent);
+							//Call function to print all the events associated with the particular day
+							printEvents(month.year,(month.month+1),dayNum);
+							//increment the day number
+							dayNum++;
+						}
+					}
+				}
+			}
+			//Function to print all of the events of the day in the cell
+			function printEvents(dateYear, dateMonth, dateDay){
+				//first grab events for the day
+				var xmlHttp = new XMLHttpRequest();
+				xmlHttp.open("POST", "eventsperday.php", true);
+				xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+				//console.log("year="+dateYear+"&month="+dateMonth+"&day="+dateDay);
+				xmlHttp.addEventListener("load", function(event){
+					var data = JSON.parse(event.target.responseText);
+					if(data.success){
+						var m = data.eventnum;
+						for (r=0; r<m; ++r){
+							var curevent = data.events[r];
+							var obligation = document.createElement("p");
+							obligation.innerHTML=curevent.title;
+							var eventID = dateDay+"-"+r;
+							obligation.id = eventID;
+							document.getElementById(dateDay).appendChild(obligation);
+							document.getElementById(eventID).removeEventListener("click", openFormEvent, false);
+							document.getElementById(eventID).addEventListener("click", openEventEdit, false);
+						}
+					}
+				}, false);
+				xmlHttp.send("year=" + encodeURIComponent(dateYear) + "&month=" + encodeURIComponent(dateMonth) + "&day=" + encodeURIComponent(dateDay));
+			
+			}
+			
+
+		//function to build a calendar for the previous month
+			function decreaseMonth()
+			{
+				//delete rows from the caldendar so that only the header with weekday names remains
+				wksRemove=currentMonth.getWeeks().length;
+				var table = document.getElementById("calendar");
+				for (i=0; i<wksRemove;i++){
+					table.deleteRow(1);
+				}
+				
+				//decrement the month
+				currentMonth = currentMonth.prevMonth();
+				//build the new calendar
+				buildCal(currentMonth);
+			}
+			
+		//function to build a calendar for the next month
+			function increaseMonth()
+			{
+				//delete rows from the caldendar so that only the header with weekday names remains
+				wksRemove=currentMonth.getWeeks().length;
+				var table = document.getElementById("calendar");
+				for (i=0; i<wksRemove;i++){
+					table.deleteRow(1);
+				}
+				
+				//increment the month
+				currentMonth = currentMonth.nextMonth();
+				//build the calendar based on this new month
+				buildCal(currentMonth);
+			}
+		
+		//Functions to open popup forms
+			function openFormEvent(){//open even creation form
+				eventFrm();
+			}
+			function openEventEdit(){//open even creation form
+				eventEdit();
+			}
+			function openFormReg(){//open registration form
+				regFrm();
+			}
+			function logoutJS(){//logout
+				logoutIntermediate();
+				alert("Logout Successful");
+			}
+		
+		//Test function!
+			function test(){
+				alert("buttiful");
+			}
+		</script>
+<!--END JAVASCRIPT FXNS-->
+
+<!--JQuery-->
+		<script>
+	//Functions for when the document load
+		$(document).ready(function(){
+			$(".loggedIn").toggle();
+		});
+		
+//Functions for popup forms
+	//Regular Expressions;
+		var regexUsername = /^\w+$/;
+		
+		$( function() {
+			
+	//login
+		function login(){
+			//send inputted data
+			var xmlHttp = new XMLHttpRequest();
+			xmlHttp.open("POST", "login.php", true);
+			xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			xmlHttp.send("user="+$("#user").val()+"&pass_guess="+$("#passGuess").val());
+			
+			//make an event listener for the response
+            xmlHttp.addEventListener("load", ajaxCallback, false);
+			
+			//get response on whether or not login creation was successful
+			function ajaxCallback(event) {
+				// callback function body
+				var data = JSON.parse(event.target.responseText);
+				if(data.success){
+					token = data.token;
+					loggedIn = true;
+					var userLoggedIn = $("#user").val();
+					//if successful, toggle to fields to hide elements exclusive to not logged in users, and show elements exclusive to logged-in users
+					$("fieldset.notLoggedIn").toggle();
+					$(".loggedIn").toggle();
+					alert("Login Successful");
+					document.getElementById("userWelcome").innerHTML=userLoggedIn;
+				}
+				//if the login was a failure, prompt the user to double-check their entries
+				else{
+					alert("Please check username and password");
+				}
+			}
+			increaseMonth();
+			decreaseMonth();
+		}
+		$( "#loginBUTT" ).button().on( "click", login);//call the login function when the login button is clicked
+	
+	//Logout
+		function logout(){
+			//call the logout.php
+			var xmlHttp = new XMLHttpRequest();
+			xmlHttp.open("POST", "logout.php", true);
+			xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			xmlHttp.send();
+			
+			//toggle to fields to show elements exclusive to not logged in users, and hide elements exclusive to logged-in users
+			$("fieldset.notLoggedIn").toggle();
+			$(".loggedIn").toggle();	
+			increaseMonth();
+			decreaseMonth();
+		}logoutIntermediate=logout;
+		
+	//Register User Form
+			var userCreate = $( "#createUserForm" ).dialog({
+				    autoOpen: false,
+					modal: true,
+					buttons: {
+							"Register": addUser,
+							Cancel: function() {
+							userCreate.dialog( "close" );
+							}
+						}
+			});
+			//function to open the register user form
+			function openRegForm() {
+				userCreate.dialog( "open" );
+			} regFrm=openRegForm;
+			
+			//function to take user inputted username and passwords and try to enter them into the database
+			function addUser(){
+				//assume everything is ok before we check stuff
+				var valid=true;
+				//I just wanted jquery to stop yelling at me
+				var newPass="notapassword";
+				
+				//Check to see if username is valid
+				var newUsername= $("#regUsername").val();
+				if(regexUsername.test(newUsername)){
+					valid=true;
+					document.getElementById("invalidUsernameWarning").innerHTML="";
+				}
+				else{
+					valid = false;
+					document.getElementById("invalidUsernameWarning").innerHTML="Warning:  Invalid Username";
+				}
+				
+				//check to see if passwords match
+				if($("#newPass1").val()===$("#newPass2").val()){
+					valid=true;
+					document.getElementById("unmatchedPasswordsWarning").innerHTML="";
+					newPass=$("#newPass2").val();
+				}
+				else{
+					valid = false;
+					document.getElementById("unmatchedPasswordsWarning").innerHTML="Please make sure your passwords match.";
+				}
+				
+				//see if all of our tests above passed
+				if(valid){
+					//send the approved username and password
+					var xmlHttp = new XMLHttpRequest();
+					xmlHttp.open("POST", "newuser.php", true);
+					xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+					xmlHttp.send("user="+newUsername+"&password="+newPass);
+					xmlHttp.addEventListener("load", ajaxCallbackNewUser, false);
+					//see if the php says that the username is available
+				}
+			}
+			function ajaxCallbackNewUser() {
+				// callback function body
+				var data = JSON.parse(event.target.responseText);
+				if(!data.success){
+					document.getElementById("invalidUsernameWarning").innerHTML="Account creation failed";
+					document.getElementById("unmatchedPasswordsWarning").innerHTML=data.message;
+				}
+				//If login was a success, thank the user and prompt them to log in
+				else{
+					alert("Registration successful.  Please log in.");
+					userCreate.dialog( "close" );
+				}
+			}
+			
+	//Create Event Form
+			var eventCreate = $( "#createEventForm" ).dialog({
+				    autoOpen: false,
+					height: 350,
+					width: 350,
+					modal: true,
+					buttons: {
+							"Create Event": addEvent,
+							Cancel: function() {
+							eventCreate.dialog( "close" );
+							}
+						}
+			});
+			function openEventForm() {
+				var eday =  $(event.target)[0].id;
+				var eDate = "New event on " + eday + " " + $("#dispMon").text();
+				document.getElementById("eventDate").innerHTML=eDate;
+				document.getElementById("eName").innerHTML="";
+				document.getElementById("eTime").innerHTML="";
+				document.getElementById("eTag").innerHTML="";
+				eventCreate.dialog( "open" );			
+			} eventFrm=openEventForm;
+			
+			//$( ".day" ).on( "click", openEventForm);
+			//function to add event
+			function addEvent(){
+				var eventName= $("#eName").val();
+				var eventTime=$("#eTime").val();
+				var eventTag=$("#eTag").val();
+				var thisDay=eday;
+				//var xmlHttp = new XMLHttpRequest();
+					//xmlHttp.open("POST", "newevent.php", true);
+					//xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+					var sending = "title="+eventName+"&time="+eventTime+"&tag="+eventTag+"&year="+currentY+"&month="+currentM+"&day="+thisDay;
+					alert(sending);
+					//xmlHttp.send();
+					//xmlHttp.addEventListener("load", ajaxCallbackNewEvent, false);
+			}
+			function ajaxCallbackNewEvent() {
+				// callback function body
+				var data = JSON.parse(event.target.responseText);
+				if(data.success){
+					eventCreate.dialog("close");
+				}
+				//If login was a success, thank the user and prompt them to log in
+				else{
+					alert("Error");
+				}
+			}
+			
+			function openEventEdit() {
+				
+				document.getElementById("eName").innerHTML="";
+				document.getElementById("eTime").innerHTML="";
+				document.getElementById("eTag").innerHTML="";
+				eventCreate.dialog( "open" );
+			} eventEdit=openEventEdit;
+			
+	//Share User Form
+			var calShare = $( "#calShareForm" ).dialog({
+				    autoOpen: false,
+					modal: true,
+					buttons: {
+							"Share": openShareForm,
+							Cancel: function() {
+							calShare.dialog( "close" );
+							}
+						}
+			});
+			function openShareForm() {
+				calShare.dialog( "open" );
+			}
+			$( "#shareCal" ).button().on( "click", openShareForm);
+			
+			function fetchEvents(date) {
+				var day = date;
+				var events;
+				var xmlHttp = new XMLHttpRequest();
+					xmlHttp.open("POST", "displayevents.php", true);
+					xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+					xmlHttp.addEventListener("load", ajaxCallbackFetchEvents, false);
+					xmlHttp.send();
+				return events;
+			}
+			function ajaxCallbackFetchEvents() {
+				// callback function body
+				var data = JSON.parse(event.target.responseText);
+				events=data.events[day];
+			}
+		});
+		</script>
+	 
+	</div></body>
+</html>

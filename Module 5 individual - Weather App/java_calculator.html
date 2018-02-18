@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>Calculate this!</title>
+		<style type="text/css">
+		body{
+			width: 760px; /* how wide to make your web page */
+			background-color: teal; /* what color to make the background */
+			margin: 0 auto;
+			padding: 0;
+			font:12px/16px Verdana, sans-serif; /* default font */
+		}
+		div#main{
+			background-color: #FFF;
+			margin: 0;
+			padding: 10px;
+		}
+		</style>
+	</head>
+
+
+	<body><div id="main">
+		<h1>Cool Calculator</h1>
+		<fieldset>
+			<!--Textboxes for number input-->
+			Number1:  <input type="number" id="numA"><br>
+			Number2:  <input type="number" id="numB">
+			<!--Radio buttons to select operation-->
+			<fieldset>
+				<input type="radio" id="add" name="function">Add<br>
+				<input type="radio" id="sub" name="function">Subtract<br>
+				<input type="radio" id="mult" name="function">Multiply<br>
+				<input type="radio" id="div" name="function">Divide
+			</fieldset>
+			<!--space for output-->
+			Result:  
+			<p id="output"></p>
+		</fieldset>
+		
+		<!--Java functions-->
+		<script type="text/javascript">
+		//event listeners
+		//number entry fields
+		document.getElementById("numA").addEventListener("keyup", determination);
+		document.getElementById("numB").addEventListener("keyup", determination);
+		document.getElementById("numA").addEventListener("change", determination);
+		document.getElementById("numB").addEventListener("change", determination);
+		
+		//operation selection fields
+		document.getElementById("add").addEventListener("change", determination);
+		document.getElementById("sub").addEventListener("change", determination);
+		document.getElementById("mult").addEventListener("change", determination);
+		document.getElementById("div").addEventListener("change", determination);
+		
+		//Determintation
+			function determination(){
+				var a = Number(document.getElementById("numA").value);
+				var b = Number(document.getElementById("numB").value);
+				//addition
+				if(document.getElementById("add").checked){
+					document.getElementById("output").innerHTML = a+b;
+				}
+				else if(document.getElementById("sub").checked){
+					document.getElementById("output").innerHTML = a-b;
+				}
+				else if(document.getElementById("mult").checked){
+					document.getElementById("output").innerHTML = a*b;
+				}
+				else if(document.getElementById("div").checked){
+					document.getElementById("output").innerHTML = a/b;
+				}
+				else{
+					document.getElementById("output").innerHTML = "";
+				}
+			}
+		</script>
+	</div></body>
+</html>

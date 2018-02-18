@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html>
+   <head>
+	<!--import socket.io script-->
+      <script src="/socket.io/socket.io.js"></script>
+	<!--import scripts for jquery-->
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" type="text/javascript"></script>
+		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" type="text/javascript"></script>
+      <meta charset="utf-8"/>
+		
+		<title>Chat</title>
+		
+		<script type ="text/javascript">
+			//define some helpful global variables
+			var user;
+			var userColor = "black";
+			var logged_in=false;
+			
+			var colors = ['#A3E4D7', '#DAF7A6', '#FFC300', '#FF5733', '#C70039'];
+			var attempt_room;
+			
+		//get our socket
+			var socketio = io.connect();
+		
+		//function to register the user
+			function regUser(){
+				//get username
+				user = document.getElementById("user_input").value;
+				//assign the user a color and welcome them
+				userColor = randomColor();
+				document.getElementById("welcome").innerHTML="Welcome, " + user;
+				//show relevent html elements now that the user is logged in
+				logged_in=true;
+				$(".showif_loggedout").toggle();
+				$(".showif_loggedin").toggle();
+				socketio.emit("add_user",user);
+			}
+			
+	
+		//update the chatlog when someone enters or leaves the room
+			socketio.on('update', function (data) {
+					document.getElementById("chatlog").appendChild(document.createElement("hr"));
+					document.getElementById("chatlog").appendChild(document.createTextNode(data));
+					//socketio.emit("message_to_server",{c_username:name, c_message: data, c_nameColor: "black"});
+			});
+			//function to open dialog box with options to block, kick, or message user
+			function userOptions(recepient){
+				//alert("second");
+				document.getElementById("targetuser").innerHTML=recepient;
+				$('#userForm').dialog( "open" );
+				//alert(recepient);
+			}
+		//update the userlist when someone enters or leaves the room
+			socketio.on("user_list", function(data){
+					//alert(data+"?");
+					var userlist = document.getElementById('dmlist');
+					//empty the userlist element to get rid of inactive users
+					while(userlist.firstChild){
+						 userlist.removeChild(userlist.firstChild);
+					}
+					//populate the userlist with active users
+					for (var i=0; i<data.length;i++){
+						//alert(data[i]+"!");
+						if(data[i]!==user){
+							var user_thing = document.createElement('div');
+							//add the class "room" to the div
+							user_thing.className="activeusers";
+							user_thing.id=data[i];
+							//alert("first");
+							var messagebutton = document.createElement("button");
+							messagebutton.innerHTML="Options";
+							messagebutton.onclick = function(){
+								 userOptions(user_thing.id);
+							};
+
+							//add an event listener to the room item.  When clicked, it will let the user join the room
+							//user_thing.addEventListener("onclick", userOptions(user_thing.id));
+					/*
+							//Change the color of the room div when you mouseover!
+							user_thing.addEventListener("mouseover", function(){
+								user_thing.style.backgroundColor="#b0e269";
+								});
+							user_thing.addEventListener("mouseout", function(){
+								user_thing.style.backgroundColor="#73AD21";
+								});
+					*/	
+							//add the name of the user to the user item
+							user_thing.appendChild(document.createTextNode(user_thing.id+ " "));
+							user_thing.appendChild(messagebutton);
+							//add the user item to the user list
+							userlist.appendChild(user_thing);
+							//add a line break for visual niceness
+							userlist.appendChild(document.createElement("br"));
+							}
+					}
+				});
+/*
+		socketio.on('update', function (data) {
+			socketio.emit("message_to_server_update",{c_message: data, c_nameColor: "black"});
+		});
+		*/
+
+		//send message from client to server
+			function sendMessage(){
+				var msg = document.getElementById("message_input").value;
+				document.getElementById("message_input").value="";
+				socketio.emit("message_to_server",{c_username:user, c_message: msg, c_nameColor: userColor});
+			}
+			
+		//print messages from server on the client
+			socketio.on("message_to_client",function(data) {
+				//Append an HR thematic break and the escaped HTML of the new message
+				document.getElementById("chatlog").appendChild(document.createElement("hr"));				
+				//print the username
+					var post_user=document.createElement("p");
+					var username=data.s_username;
+					post_user.className="inline";
+					post_user.innerHTML=username;
+					/*
+					//add an event listener to the username (to trigger direct messages)
+					post_user.addEventListener("click",function(){
+						alert(data.s_username);
+								});*/
+					//color the username
+					post_user.style.color = data.s_nameColor;
+					//add the username to the chatlog
+					document.getElementById("chatlog").appendChild(post_user);
+				//add the message to the chatlog
+					var printMessage=document.createTextNode(":  " +data.s_message);
+					printMessage.className="inline";
+					document.getElementById("chatlog").appendChild(printMessage);
+			 });
+/*			
+		socketio.on("message_to_client_update", function(data){
+			document.getElementById("chatlog").appendChild(document.createElement("hr"));
+			var printMessage=document.createTextNode(data.s_message);
+					printMessage.className="inline";
+					document.getElementById("chatlog").appendChild(printMessage);
+	});
+*/
+			
+		//function for joining a chatroom
+			socketio.on("join_room", function(chatroom) {
+				socket.emit('create', chatroom.room);
+			});
+		//function to update the chatroom list when a new one is created
+			socketio.on("refresh_list", function(rooms) {
+				$('#roomlist').empty();
+				for (var j = 0; j < rooms.length; j++){
+					addRoom(rooms[j].name, rooms[j].id, rooms[j].hasPass);
+				}
+			});
+		//	socketio.on("refresh_users", function(room) {
+		//		$('userlist').empty();
+		//		for(var room2 in rooms){
+		//			console.log(room2);
+		//		if(rooms[room2].id == room){
+		//		 array = rooms[room2].activeUsers;
+		//	}
+		//}
+		//	for(var k = 0; k <array.length; k++){
+		//		addUser(array[k]);
+		//		console.log(array[k]);
+		//	}
+		//	});
+			
+		//function for displaying a sticker that was sent
+			socketio.on("display_sticker",function(data) {
+				//add a line break for niceness
+				document.getElementById("chatlog").appendChild(document.createElement("hr"));
+				
+				//display the username (as in the message_to_client function above)
+					var post_user=document.createElement("p");
+					var username=data.s_username;
+					post_user.className="inline";
+					post_user.innerHTML=username+":  ";
+					//add an event listener (to be used for direct messages)
+					post_user.addEventListener("click",function(){
+								alert(username);
+								});
+					//color the username and add it to the chatlog
+					post_user.style.color = data.s_nameColor;
+					document.getElementById("chatlog").appendChild(post_user);
+				
+				//display the sticker on the chatlog
+				var sticker=document.createElement("img");
+				sticker.src="../static/"+data.s_stickerID;
+				sticker.className="inline";
+				document.getElementById("chatlog").appendChild(sticker);
+			});
+			
+		//document onready functions
+					$(document).ready(function(){
+							//things that are hidden by default
+							$(".showif_loggedin").toggle();
+							$(".roompass").toggle();
+							addRoom("Default Lounge", "0", false);
+							//addRoom("Admin","358/2", true); 
+						
+						//dialog box for the chatroom creation form
+							var createRoom = $( "#createRoomForm" ).dialog({
+								autoOpen: false,
+								height: 500,
+								width: 350,
+								modal: true,
+								buttons: {
+										"Create Room": newRoom,
+										Cancel: function() {
+										createRoom.dialog( "close" );
+										}
+									}
+							});
+							
+						//dialog box for the password guess form when attempting to enter a password-protected room	
+							var passGuess = $( "#passwordRoom" ).dialog({
+								autoOpen: false,
+								height: 300,
+								width: 350,
+								modal: true,
+								buttons: {
+										"Submit": checkguess,
+										Cancel: function() {
+										passGuess.dialog( "close" );
+										}
+									}
+							});
+							//dialog box for user options
+								var userForm = $( "#userForm" ).dialog({
+								autoOpen: false,
+								modal: true,
+								buttons: {
+										"Block": blockUser,
+										"Kick": kickUser,
+										"Message": dmUser,
+										Cancel: function() {
+										userForm.dialog( "close" );
+										}
+									}
+							});
+
+						//misc jquery functions activated when the user interacts with various html elements
+							$(function(){
+								//open the chatroom creation form when the dog is clicked
+								$('#dog').click(function(){
+									if(logged_in){
+										createRoom.dialog( "open" );	
+									}
+								});
+								/**
+								$('#test').click(function(){
+									passGuess.dialog( "open" );
+								});**/
+								//toggle the password field when the user clicks a checkbox on the room creation form
+								$('#boolpass').change(function() {
+									$('.roompass').toggle();
+								});
+								//send a sticker when the user clicks on a sticker
+								$('.sticker').click(function(event){
+									socketio.emit("sticker_sent",
+										  {c_username: user, c_nameColor: userColor, c_stickerID: event.target.id});
+								});
+								$('.activeusers').click(function(event){
+									alert(event.target.id);
+								});
+								 $('#message_input').on('keypress', function (event) {
+										if(event.which === 13){
+											sendMessage();
+										}
+								});
+								 
+							});
+					});
+			function checkguess(){
+				//take the password guess and pass it to the socket
+				var password_guess=document.getElementById("passguess").value;
+				socketio.emit("verify_pass", {roomID: attempt_room, guess: password_guess});
+				//('#passwordRoom').dialog( "close" );
+			}
+			
+			//the socket returns whether or not the user guessed the password correctly
+			socketio.on("return_pass",function(data) {
+				//if the user entered the correct password, let them in.
+				if(data.success){
+					$("#currentRoom h3").text(data.room_name);
+					switchRoom(data.room_ID, user);
+					document.getElementById("passError").innerHTML="";
+					document.getElementById("passguess").value="";
+					$('#passwordRoom').dialog( "close" );
+				}
+			//if the password guess was incorrect, make them guess again.
+				else{
+					document.getElementById("passguess").value="";
+					document.getElementById("passError").innerHTML="Incorrect Password.  Please try again.";
+				}
+			});
+			function switchRoom(room, user){
+				 socketio.emit("move_room", room, user);
+			}
+			function blockUser(room, blockableUser){
+				 socketio.emit("block_user", room, blockableUser);
+			}
+			function kickUser(room, blockableUser){
+				 socketio.emit("kick_user", room, blockableUser);
+			}
+			function dmUser(room, blockableUser){
+				socketio.emit("dm_user", room, blockableUser);
+			}
+			
+		//function to check that everything the user entered for the chatroom is good to go before we pass it to the socket
+			function newRoom(){
+				//set up some variables.  We assume the room is good to go unless we encounter a problem
+				var room_ok=true;
+				//get the desired chatroom name
+				var x = document.getElementById("rName").value;
+				var pass = null;
+				var roomID=document.querySelectorAll('.room').length;
+				var creator = user;
+				
+				//see if the user wants to make a password-protected room
+				var hasPass=document.getElementById('boolpass').checked;
+				//if the user set a password on the room, we need to check that the passwords match
+				if(hasPass){
+					var roompw1 = document.getElementById("roompass1").value;
+					var roompw2 = document.getElementById("roompass2").value;
+					
+					//see if the passwords match
+					if (roompw1===roompw2){
+						pass = roompw1;
+						document.getElementById("roomError").innerHTML="";
+					}
+					//if the passwords don't match, alert the user and stop the room from being created
+					else{
+						document.getElementById("roomError").innerHTML="Error.  Please check that the passwords match.";
+						room_ok=false;
+					}
+				}
+				
+				//if the room is ok, we send the info to the socket
+				if(room_ok){
+						socketio.emit("new_room_created",
+										  {room_ID: roomID, room_name: x, room_hasPass: hasPass, room_pass: pass});
+						document.getElementById("rName").value="";
+						document.getElementById("roompass1").value="";
+						document.getElementById("roompass2").value="";
+						$('#createRoomForm').dialog( "close" );
+					
+				}	
+			}
+			
+		//create a visual room element to display in the chatroom list
+			function addRoom(r_name,r_id, hasPass){
+				//create the div, but don't display it
+				var room_thing = document.createElement('div');
+				//add the class "room" to the div
+				room_thing.className="room";
+				room_thing.id=r_id;
+				var title="";
+				if(hasPass){
+					title=r_name+"*";
+				}
+				else{
+					title=r_name;
+				}
+				//add an event listener to the room item.  When clicked, it will let the user join the room
+				room_thing.addEventListener("click", function(){
+					if (hasPass){
+						attempt_room=r_id;
+						$('#passwordRoom').dialog( "open" );
+					}
+					else{
+						$("#currentRoom h3").text(r_name);
+						switchRoom(r_id, user);
+					}
+					});
+				//Change the color of the room div when you mouseover!
+						room_thing.addEventListener("mouseover", function(){
+							room_thing.style.backgroundColor="#b0e269";
+							});
+						room_thing.addEventListener("mouseout", function(){
+							room_thing.style.backgroundColor="#73AD21";
+							});
+				//add the name of the chatroom to the room item
+				room_thing.appendChild(document.createTextNode(title));
+				//add the room to the chatroom list
+				document.getElementById("roomlist").appendChild(room_thing);
+				//add a line break for visual niceness
+				document.getElementById("roomlist").appendChild(document.createElement("br"));
+			}
+			//function addUser(username){
+			//	var user_thing = document.createElement('div');
+			//	user.thing.id = username;
+			//	user.thing.appendChild(document.createTextNode(title));
+			//	console.log("hey");
+			//	document.getElementById("userlist").appendChild(user_thing);
+			//}
+			function randomColor(){
+				return colors[Math.floor(Math.random() * colors.length)];
+			}
+		
+		</script>
+		<style type="text/css">
+			body{
+				background-color: #73AD21;
+			}
+			div#rooms{
+				height: 90vh;
+				padding: 2%;
+				width: 15%;
+				min-width: 150px;
+				float: left;
+				border-radius: 25px;
+				border: 2px solid #73AD21;
+				background-color: #FFFFFF;
+				display: inline;
+			}
+			div#roomlist{
+				margin:0 auto;
+				height: 80vh;
+				width: 99%;
+				word-wrap: break-word;
+				overflow-y: auto;
+				margin:auto;
+				border: 2px solid #73AD21;
+			}
+			.room{
+				width:auto;
+				height:50px;
+				background-color: #73AD21;
+				color: white;
+			}
+			div#chat{
+				margin:0 auto;
+				height: 90vh;
+				padding: 2%;
+				width: 50%;
+				min-width: 500px;
+				border-radius: 25px;
+				border: 2px solid #73AD21;
+				background-color: #FFFFFF;
+				
+			}
+			div#chatlog{
+				margin:0 auto;
+				height: 70vh;
+				width: 99%;
+				word-wrap: break-word;
+				overflow-y: auto;
+				border: 2px solid #73AD21;
+			}
+			
+			div#stickers{
+				margin:0 auto;
+				width: 99%;
+				border: 2px solid #73AD21;
+			}
+			div#direct_messages{
+				height: 90vh;
+				padding: 2%;
+				width: 15%;
+				min-width: 150px;
+				float: right;
+				display: inline;
+				background-color: #FFFFFF;
+				border-radius: 25px;
+				border: 2px solid #73AD21;
+			}
+			div#dmlist{
+				margin:0 auto;
+				height: 80vh;
+				width: 99%;
+				word-wrap: break-word;
+				overflow-y: auto;
+				margin:auto;
+				border: 2px solid #73AD21;
+			}
+			.activeusers{
+				width:auto;
+				height:50px;
+				background-color: #73AD21;
+				color: white;
+			}
+			input#message_input{
+				width: 85%;
+				margin:auto;
+			}
+			img{
+				max-width:20px;
+				display: inline;
+			}
+			h2{
+				margin-top: -10px;
+			}
+			.inline{
+				display:inline;
+			}
+		</style>
+   </head>
+   <body>
+		<div id="main">
+			<div id="rooms">
+				<h2>Chat Rooms  <img id="dog" src="../static/dog_annoying.gif" alt="img"></h2>
+				<div class="showif_loggedin">click the dog to make a chatroom</div>
+				<div id="roomlist">
+				
+				</div>
+			</div>
+			<div id="direct_messages">
+				<h2>Direct Messages</h2>
+				<div>active users in current room</div>
+				<div id="dmlist">
+					
+				</div>
+			</div>
+			<div id="chat">
+				<div id = "currentRoom">
+				<div id = "active">
+				</div>
+				<h3>welcome!</h3>
+				
+			</div>
+				<div id = "chatframe">
+					
+					<div id="welcome"></div>
+				<div id="chatlog">
+				</div>
+				</div>
+				<div class = "showif_loggedout">
+					<input type="text" id="user_input"/>
+					<button onclick="regUser();">Register</button>
+				</div>
+				<div class = "showif_loggedin">
+					<input type="text" id="message_input"/>
+					<button onclick="sendMessage();">send</button>
+					<div id="stickers">
+						<img class="sticker" id="face_happy.png" src="../static/face_happy.png" alt ="img">
+						<img class="sticker" id="face_teethsmile.png" src="../static/face_teethsmile.png" alt ="img">
+						<img class="sticker" id="face_happycry.png" src="../static/face_happycry.png" alt ="img">
+						<img class="sticker" id="face_teardrop.png" src="../static/face_teardrop.png" alt ="img">
+						<img class="sticker" id="face_anger.png" src="../static/face_anger.png" alt ="img">
+						<img class="sticker" id="face_heh.png" src="../static/face_heh.png" alt ="img">
+						<img class="sticker" id="face_distressteardrop.png" src="../static/face_distressteardrop.png" alt ="img">
+						<img class="sticker" id="face_extremecry.png" src="../static/face_extremecry.png" alt ="img">
+						<img class="sticker" id="face_3.png" src="../static/face_3.png" alt ="img">
+						<img class="sticker" id="zzz.png" src="../static/zzz.png" alt ="img">
+						<img class="sticker" id="face_ah.png" src="../static/face_ah.png" alt ="img">
+						<img class="sticker" id="face_hearteyes.png" src="../static/face_hearteyes.png" alt ="img">
+						<img class="sticker" id="face_upsidedown.png" src="../static/face_upsidedown.png" alt ="img">
+						<br>
+						<img class="sticker" id="moon.png" src="../static/moon.png" alt ="img">
+						<img class="sticker" id="star.png" src="../static/star.png" alt ="img">
+						<img class="sticker" id="flower_hibiscus.png" src="../static/flower_hibiscus.png" alt ="img">
+						<img class="sticker" id="birb_baby.png" src="../static/birb_baby.png" alt ="img">
+						<img class="sticker" id="heart_red.png" src="../static/heart_red.png" alt ="img">
+						<img class="sticker" id="heart_yellow.png" src="../static/heart_yellow.png" alt ="img">
+						<img class="sticker" id="heart_green.png" src="../static/heart_green.png" alt ="img">
+						<img class="sticker" id="heart_blue.png" src="../static/heart_blue.png" alt ="img">
+						<img class="sticker" id="heart_purple.png" src="../static/heart_purple.png" alt ="img">
+						<img class="sticker" id="heart_black.png" src="../static/heart_black.png" alt ="img">
+						<img class="sticker" id="heart_sparkle.png" src="../static/heart_sparkle.png" alt ="img">
+						<img class="sticker" id="dog_annoying.gif" src="../static/dog_annoying.gif" alt ="img">
+					</div>
+				</div>
+			</div>
+      </div>
+		<div class="form" id="createRoomForm" title="Create a new chatroom">
+			<h3>Please enter the information below</h3>
+			<form>
+				<fieldset>
+					<br>
+					<label for="rName">Room Name</label>
+						<input type="text" name="rName" id="rName" required><br><br>
+						I would like to set a password for this room:
+						<input type="checkbox" name="boolpass" id="boolpass"><br><br>
+						<input type="password" class="roompass" id="roompass1" placeholder="Password"><br><br>
+						<input type="password" class="roompass" id="roompass2" placeholder="Enter the password again"><br>
+						<p id="roomError"></p><br>
+				</fieldset>
+			</form>
+		</div>
+		
+			<div class="form" id="userForm" title="What should you do with user?">
+			<form>
+				<div id="targetuser"></div>
+			</form>
+		</div>
+		
+		<div class="form" id="passwordRoom" title="Please Enter the Room Password">
+			<form>
+				<fieldset>
+					<br>
+						<input type="password" id="passguess" placeholder="Password"><br>
+						<p id="passError"></p><br>
+				</fieldset>
+			</form>
+		</div>
+   </body>
+</html>

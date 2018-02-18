@@ -1,0 +1,35 @@
+create database module5;
+use module5;
+
+create table users (
+username varchar(64) not null,
+password varchar(255) not null,
+userid int unsigned not null auto_increment,
+primary key(userid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+create table events (
+userid int unsigned not null,
+eventid int unsigned not null auto_increment,
+title varchar(64) not null,
+eventdatetime datetime not null,
+tagname varchar(64),
+primary key(eventid),
+foreign key (userid) references users (userid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+create table share (
+shareid int unsigned not null auto_increment,
+ownerid int unsigned not null,
+userid int unsigned not null,
+eventid int unsigned not null,
+primary key(shareid),
+foreign key (ownerid) references users (userid),
+foreign key (userid) references users (userid),
+foreign key (eventid) references events (eventid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+
+mysql username:  caladmin
+mysql password:  calamityjane21
+mysql database:  module5

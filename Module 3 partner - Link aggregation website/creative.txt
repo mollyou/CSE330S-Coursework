@@ -1,0 +1,78 @@
+Phoebe Moh : 438020
+Julia Vogl : 435169
+
+Website:  http://ec2-52-43-56-150.us-west-2.compute.amazonaws.com/~mohphoebe/fall2016-module3-phoebe-moh-438020-julia-vogl-435169/home.php
+
+For our creative portion, we were planning on having a like system in which users could like comments and stories, and also choose to display stories in order of most liked or most recent on the main page. Unfortunately, we ran out of time.
+We had changes in theory, but in trying to upload them (must have missed a bracket) we broke the website.
+
+All mysql commands and login credentials are as seen below.
+
+----------------------------------------------------
+
+create database module3;
+use database module3;
+
+create table users (
+username varchar(64) not null,
+password varchar(1024) not null,
+userid int unsigned not null auto_increment,
+primary key(userid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+create table stories (
+authorid int unsigned not null,
+posted timestamp not null,
+title varchar(128) not null,
+story_body mediumblob not null,
+storyid int unsigned not null auto_increment,
+likes smallint unsigned not null,
+primary key(storyid),
+foreign key (authorid) references users (userid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+create table comments (
+authorid int unsigned not null,
+comment_body text not null,
+posted timestamp not null,
+storyid int unsigned not null,
+commentid int unsigned not null auto_increment,
+likes smallint unsigned not null,
+primary key(commentid),
+foreign key (authorid) references users (userid),
+foreign key (storyid) references stories (storyid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+create table links (
+linkid int unsigned not null auto_increment,
+url text not null,
+storyid int unsigned not null,
+primary key (linkid),
+foreign key (storyid) references stories (storyid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+CREATE TABLE commentlikes (
+likerid int unsigned not null,
+commentid int unsigned not null,
+PRIMARY KEY (likerid,commentid),
+FOREIGN KEY (likerid) REFERENCES users (userid),
+FOREIGN KEY (commentid) REFERENCES comments (commentid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+CREATE TABLE storylikes (
+likerid int unsigned not null,
+storyid int unsigned not null,
+PRIMARY KEY (likerid,storyid),
+FOREIGN KEY (likerid) REFERENCES users (userid),
+FOREIGN KEY (storyid) REFERENCES stories (storyid)
+) engine = INNODB DEFAULT character SET = utf8 COLLATE = utf8_general_ci;
+
+select posted, title, users.username, likes, story_body from stories join users on (stories.authorid=users.userid) order by posted limit 10;
+
+select posted, title, users.username, likes, story_body, links.url from stories join users on (stories.authorid=users.userid) join links on (stories.storyid=links.storyid) where storyid=?
+
+insert into comments (authorid, comment_body, storyid, likes) values (juliavogl, 'i think snakes are cool', 16, 0);
+
+mysql username:  newsadmin
+mysql password:  plzsendhelpto123help
+mysql database:  module3

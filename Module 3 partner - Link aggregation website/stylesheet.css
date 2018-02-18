@@ -1,0 +1,37 @@
+
+a:visited{
+    color:  purple;
+}
+
+body{
+	width: 800px;
+	background-color:lightblue;
+	margin: 0 auto;
+	padding: 0;
+	font:12px/16px Verdana, sans-serif;
+    
+}
+.textarea
+{
+    height: 200px;
+    width:  400px;
+    font-size: 14pt;
+}
+
+h1{
+    font:24px/26px Verdana, sans-serif;
+    color:  white;
+}
+h2{
+    font:20px/18px Verdana, sans-serif;
+    color:  white; 
+}
+p {
+    font-family:  Verdana, sans-serif;
+    font-size:  20px;
+}
+div#main{
+	background-color: #FFF;
+	margin: 0;
+	padding: 10px;
+}

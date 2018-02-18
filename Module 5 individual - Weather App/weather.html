@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Weather</title>
+        <link rel="stylesheet" type="text/css" href="weather.css" />
+    </head>
+    <body><div id="main">
+        <!--Display Info-->
+        <div class="weather" id="weatherWidget">
+        <div class="weather-loc">  </div>
+        <div class="weather-humidity">  </div>
+        <div class="weather-temp">  </div>
+        <img class="weather-tomorrow" />
+        <img class="weather-dayaftertomorrow" /><br>
+        <button id="butt">Refresh</button>
+        
+        <script type="text/javascript">
+            //automatically activate weather widget when page loads
+            document.addEventListener("DOMContentLoaded", fetchWeather, false);
+            // function to fetch weather
+            function fetchWeather(){
+                //Initializing an XMLHTtpRequest Object
+                var xmlHttp = new XMLHttpRequest();
+                
+                //Open connection to server
+                xmlHttp.open("GET", "http://classes.engineering.wustl.edu/cse330/content/weather_json.php", true);
+                //make an event listener
+                xmlHttp.addEventListener("load", ajaxCallback, false);
+                xmlHttp.send();
+                
+            }
+            
+            function ajaxCallback() {
+            // callback function body
+            var data = JSON.parse(event.target.responseText);
+            //Display the info in the HTML portion=
+            var stronkLoc= "<strong>"+data.location.city+" </strong>"+data.location.state;
+            document.getElementsByClassName("weather-loc")[0].innerHTML=stronkLoc;
+            document.getElementsByClassName("weather-humidity")[0].textContent=data.atmosphere.humidity;
+            document.getElementsByClassName("weather-temp")[0].textContent=data.current.temp;
+            
+            var tomorrowURL = "http://us.yimg.com/i/us/nws/weather/gr/"+data.tomorrow.code+"ds.png";
+            var dayAfterURL = "http://us.yimg.com/i/us/nws/weather/gr/"+data.dayafter.code+"ds.png";
+            document.getElementsByClassName("weather-tomorrow")[0].src=tomorrowURL;
+            document.getElementsByClassName("weather-dayaftertomorrow")[0].src=dayAfterURL;
+            }
+            
+            document.getElementById("butt").addEventListener("click", fetchWeather);
+        </script>
+        </div>
+    </div></body>
+
+</html>
